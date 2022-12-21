@@ -42,6 +42,27 @@ export class UsersService {
   }
 
   /**
+   * Updates a user by ID with new values.
+   * @param id 
+   * @param userUpdate 
+   * @returns 
+   */
+  async updateUser(id: string, userUpdate: Partial<User>): Promise<User> {
+    const user = await this.userModel.findOne({ id }).exec();
+
+    if (!user) {
+      throw new NotFoundException(`user with ID ${id} not found`);
+    }
+
+    user.firstName = userUpdate.firstName ?? user.firstName;
+    user.lastName = userUpdate.lastName ?? user.lastName;
+    user.email = userUpdate.email ?? user.email;
+    await user.save();
+
+    return user;
+  }
+
+  /**
    * Sets/Unsets refresh token for a user.
    * @param userId
    * @param refreshToken
@@ -56,7 +77,7 @@ export class UsersService {
     }
 
     user.refreshToken = refreshToken ? bcrypt.hashSync(refreshToken, 10) : '';
-    user.save();
+    await user.save();
     return;
   }
 }
