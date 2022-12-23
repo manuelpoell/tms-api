@@ -7,4 +7,5 @@ export const UserDtoMapper: DataMapper<User, UserDto> = (from) => ({
   firstName: from.firstName,
   lastName: from.lastName,
   email: from.email,
+  role: from.role,
 });

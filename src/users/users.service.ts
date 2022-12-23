@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './models/user.schema';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import { SessionInfoModel } from 'src/auth/models/session-info.models';
+import { UserRole } from './models/user-role.enum';
+import { UserAddDto } from './models/user-add.dto';
 
 @Injectable()
 export class UsersService {
@@ -31,9 +39,13 @@ export class UsersService {
    * @param id
    * @returns
    */
-  async findByIdOrFail(id: string): Promise<User> {
-    const user = await this.userModel.findOne({ id }).exec();
+  async findByIdOrFail(session: SessionInfoModel, id: string): Promise<User> {
+    // Only admins should be able to view other users
+    if (session.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
 
+    const user = await this.userModel.findOne({ id }).exec();
     if (!user) {
       throw new NotFoundException(`user with ID ${id} not found`);
     }
@@ -42,14 +54,85 @@ export class UsersService {
   }
 
   /**
-   * Updates a user by ID with new values.
-   * @param id 
-   * @param userUpdate 
-   * @returns 
+   * Returns a list of users with text filter, offset and limit.
+   * @param session
+   * @param limit
+   * @param offset
+   * @param filter
+   * @returns
    */
-  async updateUser(id: string, userUpdate: Partial<User>): Promise<User> {
-    const user = await this.userModel.findOne({ id }).exec();
+  async getUserList(
+    session: SessionInfoModel,
+    limit: number,
+    offset: number,
+    filter: string,
+  ): Promise<{ users: Array<User>; filterCount: number; totalCount: number }> {
+    // Only admins should be able to fetch the list of users
+    if (session.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
 
+    const filterOptions =
+      filter.length > 0 ? { $text: { $search: filter } } : {};
+
+    const users = await this.userModel
+      .find(filterOptions)
+      .skip(offset)
+      .limit(limit)
+      .exec();
+    const filterCount = await this.userModel
+      .countDocuments(filterOptions)
+      .exec();
+    const totalCount = await this.userModel.countDocuments().exec();
+
+    return {
+      users,
+      totalCount,
+      filterCount,
+    };
+  }
+
+  /**
+   * Adds a new user.
+   * @param session
+   * @param addUser
+   * @returns
+   */
+  async addUser(session: SessionInfoModel, addUser: UserAddDto): Promise<User> {
+    // Only admins should be able to add new users
+    if (session.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
+
+    const user = new this.userModel({
+      id: uuidv4(),
+      firstName: addUser.firstName,
+      lastName: addUser.lastName,
+      email: addUser.email,
+      role: addUser.role,
+      password: bcrypt.hashSync(addUser.password, 10),
+    });
+
+    return user.save();
+  }
+
+  /**
+   * Updates a user by ID with new values.
+   * @param id
+   * @param userUpdate
+   * @returns
+   */
+  async updateUser(
+    session: SessionInfoModel,
+    id: string,
+    userUpdate: Partial<User>,
+  ): Promise<User> {
+    // Only admins should be able to update other users
+    if (session.userId !== id && session.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
+
+    const user = await this.userModel.findOne({ id }).exec();
     if (!user) {
       throw new NotFoundException(`user with ID ${id} not found`);
     }
@@ -57,9 +140,24 @@ export class UsersService {
     user.firstName = userUpdate.firstName ?? user.firstName;
     user.lastName = userUpdate.lastName ?? user.lastName;
     user.email = userUpdate.email ?? user.email;
-    await user.save();
 
-    return user;
+    return user.save();
+  }
+
+  /**
+   * Deletes a user by ID
+   * @param session
+   * @param id
+   * @returns
+   */
+  async deleteUserById(session: SessionInfoModel, id: string): Promise<void> {
+    // Only admins should be able to delete other users
+    if (session.userId !== id && session.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
+
+    await this.userModel.deleteOne({ id }).exec();
+    return;
   }
 
   /**
