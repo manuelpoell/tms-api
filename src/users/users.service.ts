@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -145,18 +146,33 @@ export class UsersService {
   }
 
   /**
-   * Deletes a user by ID
+   * Deletes a user by ID.
    * @param session
    * @param id
    * @returns
    */
   async deleteUserById(session: SessionInfoModel, id: string): Promise<void> {
-    // Only admins should be able to delete other users
-    if (session.userId !== id && session.role !== UserRole.ADMIN) {
+    // Only admins should be able to delete users
+    if (session.role !== UserRole.ADMIN) {
       throw new ForbiddenException();
     }
 
     await this.userModel.deleteOne({ id }).exec();
+    return;
+  }
+
+  /**
+   * Deletes own user account.
+   * @param session 
+   * @param password 
+   */
+  async deleteSelf(session: SessionInfoModel, password: string): Promise<void> {
+    const user = await this.userModel.findOne({ id: session.userId });
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      throw new BadRequestException(`provided password does not match`);
+    }
+
+    await this.userModel.deleteOne({ id: session.userId });
     return;
   }
 

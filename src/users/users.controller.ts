@@ -18,6 +18,7 @@ import { UsersService } from './users.service';
 import { UserUpdateDto } from './models/user-update.dto';
 import { UserListDto } from './models/user-list.dto';
 import { UserAddDto } from './models/user-add.dto';
+import { UserDeleteSelfDto } from './models/user-delete-self.dto';
 
 @Controller('users')
 export class UsersController {
@@ -86,8 +87,8 @@ export class UsersController {
   }
 
   @Delete('me')
-  async deleteMe(@SessionInfo() session: SessionInfoModel): Promise<void> {
-    return await this.usersService.deleteUserById(session, session.userId);
+  async deleteSelf(@SessionInfo() session: SessionInfoModel, @Body() body: UserDeleteSelfDto): Promise<void> {
+    return await this.usersService.deleteSelf(session, body.password);
   }
 
   @Delete(':id')
