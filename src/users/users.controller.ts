@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { SessionInfoModel } from 'src/auth/models/session-info.models';
@@ -86,8 +87,11 @@ export class UsersController {
     );
   }
 
-  @Delete('me')
-  async deleteSelf(@SessionInfo() session: SessionInfoModel, @Body() body: UserDeleteSelfDto): Promise<void> {
+  @Put('me')
+  async deleteSelf(
+    @SessionInfo() session: SessionInfoModel,
+    @Body() body: UserDeleteSelfDto,
+  ): Promise<void> {
     return await this.usersService.deleteSelf(session, body.password);
   }
 

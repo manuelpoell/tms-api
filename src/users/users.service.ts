@@ -163,8 +163,8 @@ export class UsersService {
 
   /**
    * Deletes own user account.
-   * @param session 
-   * @param password 
+   * @param session
+   * @param password
    */
   async deleteSelf(session: SessionInfoModel, password: string): Promise<void> {
     const user = await this.userModel.findOne({ id: session.userId });
