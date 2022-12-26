@@ -10,7 +10,7 @@ export class LogService {
 
   /**
    * Log messages will be transported to console.
-   * Additional transport to file in production. (TODO)
+   * Additional transport to file in production.
    * @param message
    */
   log(message: any): void {

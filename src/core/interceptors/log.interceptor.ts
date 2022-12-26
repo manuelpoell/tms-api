@@ -32,8 +32,6 @@ export class LogInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    // TODO log redaction for passwords
-
     this.logService.log({
       startTime: startTime.toISOString(),
       endTime: new Date().toISOString(),
