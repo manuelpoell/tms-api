@@ -177,6 +177,27 @@ export class UsersService {
   }
 
   /**
+   * Changes the password of a user.
+   * @param userId
+   * @param password
+   * @param newPassword
+   */
+  async changeUserPassword(
+    userId: string,
+    password: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userModel.findOne({ id: userId });
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      throw new BadRequestException(`provided password does not match`);
+    }
+
+    user.password = bcrypt.hashSync(newPassword, 10);
+    await user.save();
+    return;
+  }
+
+  /**
    * Sets/Unsets refresh token for a user.
    * @param userId
    * @param refreshToken

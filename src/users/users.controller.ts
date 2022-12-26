@@ -20,6 +20,7 @@ import { UserUpdateDto } from './models/user-update.dto';
 import { UserListDto } from './models/user-list.dto';
 import { UserAddDto } from './models/user-add.dto';
 import { UserDeleteSelfDto } from './models/user-delete-self.dto';
+import { UserChangePasswordDto } from './models/user-change-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -73,6 +74,18 @@ export class UsersController {
   ): Promise<UserDto> {
     return UserDtoMapper(
       await this.usersService.updateUser(session, session.userId, userUpdate),
+    );
+  }
+
+  @Patch('me/password')
+  async changeUserPassword(
+    @SessionInfo() session: SessionInfoModel,
+    @Body() body: UserChangePasswordDto,
+  ): Promise<void> {
+    return await this.usersService.changeUserPassword(
+      session.userId,
+      body.password,
+      body.newPassword,
     );
   }
 
