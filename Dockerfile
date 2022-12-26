@@ -10,5 +10,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
 COPY --from=builder /app/dist ./dist
+RUN mkdir /var/log
 EXPOSE 3000
 CMD ["npm", "run", "start:prod"]
