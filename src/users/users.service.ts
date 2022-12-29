@@ -141,6 +141,7 @@ export class UsersService {
     user.firstName = userUpdate.firstName ?? user.firstName;
     user.lastName = userUpdate.lastName ?? user.lastName;
     user.email = userUpdate.email ?? user.email;
+    user.role = userUpdate.role ?? user.role;
 
     return user.save();
   }
