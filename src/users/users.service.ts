@@ -42,7 +42,7 @@ export class UsersService {
    */
   async findByIdOrFail(session: SessionInfoModel, id: string): Promise<User> {
     // Only admins should be able to view other users
-    if (session.role !== UserRole.ADMIN) {
+    if (session.userId !== id && session.role !== UserRole.ADMIN) {
       throw new ForbiddenException();
     }
 
