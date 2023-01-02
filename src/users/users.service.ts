@@ -8,7 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './models/user.schema';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'crypto';
 import { SessionInfoModel } from 'src/auth/models/session-info.models';
 import { UserRole } from './models/user-role.enum';
 import { UserAddDto } from './models/user-add.dto';
@@ -106,7 +106,7 @@ export class UsersService {
     }
 
     const user = new this.userModel({
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       firstName: addUser.firstName,
       lastName: addUser.lastName,
       email: addUser.email,
